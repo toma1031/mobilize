@@ -1,11 +1,67 @@
 {% load static %}
-{% block js %}
-<!-- <script type="text/javascript" src="{% static 'js/like.js' %}"></script> -->
-{% endblock %}
-{% block main %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css"
+    integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
 
-{% for post in post_list %}
-{% endfor %}
+    <!-- Google Map表示 -->
+    <!-- 参考資料
+    https://qiita.com/Haruka-Ogawa/items/997401a2edcd20e61037 -->
+    <!-- https://www.itti.jp/web-design/how-to-display-a-map-using-google-map-api/ -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCleE-Z2qlfSDbIJWFRKA8susZPY44Vv3o&callback=initMap" async></script>
+    <script>
+      function initMap() {
+        var mapPosition = new google.maps.LatLng( 1,1 );//緯度経度
+        var map = new google.maps.Map(document.getElementById('gmap'), {
+        zoom: 17,//ズーム
+        center: mapPosition
+      });
+        var marker = new google.maps.Marker({
+        position: mapPosition,
+        map: map
+        });
+      }
+    </script>
+
+    <style>
+      #gmap {
+          width:100%;
+        height:500px;
+      }
+    </style>
+    <title>Mobilize</title>
+  </head>
+  <body>
+  <!-- list_dataはリスト型でその中に辞書が内包されている
+  その辞書を取り出すには下記のようなForループで取り出す
+  参考文献
+  https://opendata-web.site/blog/entry/18/ -->
+  <!-- そして、辞書から取り出すにはKeyを指定してそのValueを抽出するには
+  {{ 変数.キー }}で取り出せ、HTMLに描画できる -->
+  <!-- 参考文献
+  https://hiroronn.hatenablog.jp/entry/20181010/1539129686 -->
+  <div id="gmap"></div>
+  {% for list in list_data %}
+  <h1>Id: {{ list.id }}</h1>
+  <h2>Title: {{ list.title }}</h2>
+  <h3>description: {{ list.description }}</h3>
+  <h4>Timezone: {{ list.timezone }}</h4>
+  <h5>Location: {{ list.location }}</h5>
+  <h6>Created_date: {{ list.created_date }}</h6>
+  {% endfor %}
 
 
-{% endblock main %}
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, Bootstrap JS -->
+  <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <script src="{% static 'js/main.js' %}"></script> -->
+
+</body>
