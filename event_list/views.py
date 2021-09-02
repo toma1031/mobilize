@@ -52,6 +52,8 @@ def index_view(request):
     # response変数にGETしたURLのAPIを格納
     return_json = json.loads(requests.get(url).text)
     response = return_json['data'] 
+    pagination_next = return_json['next'] 
+    pagination_previous = return_json['previous'] 
     # contexという辞書型を作る。list_dataという変数にresponse（API）入れていく
     # 参考文献
     # https://note.nkmk.me/python-requests-usage/
@@ -90,7 +92,7 @@ def index_view(request):
       print(summary['location'])
       print(summary['title'])
       # summaryのLocationキーは何も入っていない時があるので
-      if summary['location'] is None:
+      if summary['title'] is None or summary['location'] is None:
         # 参考文献
         # https://note.nkmk.me/python-pass-usage/
         # 入っていない時はそれ以降の処理を行わずに次のステップに進むため、Continue
@@ -115,14 +117,17 @@ def index_view(request):
     
       new_d_for_js = {
       # 'new_id': summary['id'], 
+      # 'new_title': dic_title, 
       # 'new_description':summary['description'], 
       # 'new_timezone':summary['timezone'], 
       'new_latitude': dic_latitude,
       'new_longitude': dic_longitude, 
       # 'new_created_date':summary['created_date'], 
       }
+      
       dic_for_templates_for_html.append(new_d_for_html)
       dic_for_templates_for_js.append(new_d_for_js)
+
 
     # summary_listはリスト型。
     # そこから辞書を取り出して、さらに任意のキーの値を抽出（ここではidキー）
@@ -210,6 +215,14 @@ def index_view(request):
     # print(title_latitude_longitude_dict_data_in_list)
     print('サマリー')
     print(type(dic_for_templates_for_js))
+    print('ネクスト')
+    print(pagination_next)
+    print('プリヴィアス')
+    print(pagination_previous)
+    print('タイトル')
+    print(dic_title)
+    print('緯度')
+    print(context)
     # return render(request, 'index.html', ここには辞書型しか置けない)ので上記で辞書型に変換
     # list_dataのValueであるsummary_listはリスト型、そしてそのリストに辞書が入っている
     return render(request, 'index.html', context)

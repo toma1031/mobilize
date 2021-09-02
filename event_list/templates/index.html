@@ -7,9 +7,9 @@
     <!-- Bootstrap CSS -->
     <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css"
-    integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+    integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous"> -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <!-- Google Map表示 -->
     <!-- 参考資料
@@ -124,6 +124,7 @@
     //   console.log(listData[i])
     // }
 
+
     new_latitude_longitude_list = []
           
     for (var i = 0; i < listData.length; i++) {
@@ -140,7 +141,6 @@
     for (var j = 0; j < new_latitude_longitude_list.length; j++) {
       // ここで変数final_latitude、final_longitudeにnew_latitude_longitude_listの各インデックス番号を割り当てていき
       // 入れ込んでいく
-      // final_title = new_latitude_longitude_list[j].new_title
       final_latitude = new_latitude_longitude_list[j].new_latitude
       final_longitude = new_latitude_longitude_list[j].new_longitude
 
@@ -250,10 +250,8 @@
 
     </script>
     <style>
-      #sample {
-        width: 100%;
-        height: 500px;
-      }
+
+
       /* #gmap {
           width:100%;
         height:500px;
@@ -275,15 +273,18 @@
   	
   <div id="sample"></div>
   {% for list in list_data_for_html %}
-  <h1>Id: {{ list.new_id }}</h1>
-  <h2>Title: {{ list.new_title }}</h2>
-  <h3>description: {{ list.new_description }}</h3>
-  <h4>Timezone: {{ list.new_timezone }}</h4>
-  <!-- <h5>Location Latitude: {{ list.location.location.latitude }}</h5>
-  <h5>Location Longitude: {{ list.location.location.longitude }}</h5> -->
-  <h5>Location Latitude: {{ list.new_latitude }}</h5>
-  <h5>Location Longitude: {{ list.new_longitude }}</h5>
-  <h6>Created_date: {{ list.new_created_date }}</h6>
+  <div class="each_event">
+    <!-- <h1>Id: {{ list.new_id }}</h1> -->
+    <h2>Event Title: {{ list.new_title }}</h2>
+    <h3>Description: {{ list.new_description }}</h3>
+    <h4>Created_date: {{ list.new_created_date }}</h4>
+    <h6>Timezone: {{ list.new_timezone }}</h6>
+    <!-- <h5>Location Latitude: {{ list.location.location.latitude }}</h5>
+    <h5>Location Longitude: {{ list.location.location.longitude }}</h5> -->
+    <!-- <h5>Location Latitude: {{ list.new_latitude }}</h5> -->
+    <!-- <h5>Location Longitude: {{ list.new_longitude }}</h5> -->
+  </div>
+
   {% endfor %}
 
 <!-- 下記はPagination関係 -->
