@@ -134,25 +134,28 @@
         new_latitude_longitude_list.push(listData[i])
     }
 
-    // console.log(new_latitude_longitude_list[0].new_longitude)
+    console.log(new_latitude_longitude_list.length)
 
+    var markerData = []
     for (var j = 0; j < new_latitude_longitude_list.length; j++) {
-      // ここで変数pにnew_latitude_longitude_listの各インデックス番号を割り当てていき
+      // ここで変数final_latitude、final_longitudeにnew_latitude_longitude_listの各インデックス番号を割り当てていき
       // 入れ込んでいく
       // final_title = new_latitude_longitude_list[j].new_title
       final_latitude = new_latitude_longitude_list[j].new_latitude
       final_longitude = new_latitude_longitude_list[j].new_longitude
-      // console.log(final_title)
-      console.log(final_latitude)
-      console.log(final_longitude)
 
-
-    var markerData = [ // マーカーを立てる場所名・緯度・経度
-        {
-            // name: final_title,
+      // ここでnew_dというリストをつくり、
+       new_d = {
+            name: String(final_latitude)+'&'+String(final_longitude),
             lat: final_latitude,
             lng: final_longitude,     
-      },
+      }
+      // markerDataというリストにPushしていく
+      markerData.push(new_d)
+    }  
+    
+    // var markerData = [ // マーカーを立てる場所名・緯度・経度
+
 
       //   {
       //       name: 'Cherrywood Neighborhood: Canvass for Julie!',
@@ -208,10 +211,10 @@
       //       lat: 39.8965726,
       //       lng: -80.1846561
       // },
-      ];
+      // ];
+      
 
-    }
-
+  
     function initMap() {
     // 地図の作成
       var mapLatLng = new google.maps.LatLng({lat: markerData[0]['lat'], lng: markerData[0]['lng']}); // 緯度経度のデータ作成
@@ -236,13 +239,15 @@
     }
     
     }
-    
+
     // マーカーにクリックイベントを追加
     function markerEvent(i) {
         marker[i].addListener('click', function() { // マーカーをクリックしたとき
           infoWindow[i].open(map, marker[i]); // 吹き出しの表示
       });
     }
+    console.log(markerData)
+
     </script>
     <style>
       #sample {
@@ -281,7 +286,27 @@
   <h6>Created_date: {{ list.new_created_date }}</h6>
   {% endfor %}
 
+<!-- 下記はPagination関係 -->
+  <!-- 前へ の部分 -->
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}">Prev</a>
+  {% endif %}
 
+  <!-- 数字の部分 -->
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+      <span>{{ num }}</span>
+    {% else %}
+      <a href="?page={{ num }}">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  <!-- 次へ の部分 -->
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}">Next</a>
+  {% endif %}
+
+  
   <!-- Optional JavaScript -->
   <!-- jQuery first, Bootstrap JS -->
   <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>

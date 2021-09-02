@@ -8,8 +8,45 @@ from django.views.generic import TemplateView
 import requests
 import json
 
+# paginationについて
+# 参考文献
+# https://blog.narito.ninja/detail/31/
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+def paginate_queryset(request, queryset, count):
+    # """Pageオブジェクトを返す。
+
+    # ページングしたい場合に利用してください。
+
+    # countは、1ページに表示する件数です。
+    # 返却するPgaeオブジェクトは、以下のような感じで使えます。::
+
+    #     {% if page_obj.has_previous %}
+    #       <a href="?page={{ page_obj.previous_page_number }}">Prev</a>
+    #     {% endif %}
+
+    # また、page_obj.object_list で、count件数分の絞り込まれたquerysetが取得できます。
+
+    # """
+    paginator = Paginator(queryset, count)
+    page = request.GET.get('page')
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+    return page_obj
+
+
+
+
 # 関数ベースで書く際に第１引数にrequestを渡すのは決まっています。
 def index_view(request):
+    # 下記はpagination関係
+    # page_obj = paginate_queryset(request, 3)
+    
+  
   # ここでURLを取得して
     url = 'https://api.mobilize.us/v1/events'
     # response変数にGETしたURLのAPIを格納
@@ -51,6 +88,7 @@ def index_view(request):
     dic_for_templates_for_js = []
     for summary in response:
       print(summary['location'])
+      print(summary['title'])
       # summaryのLocationキーは何も入っていない時があるので
       if summary['location'] is None:
         # 参考文献
@@ -61,22 +99,22 @@ def index_view(request):
         # Locationキーはネスト構造となっているため下記のような感じで下っていく
         # ちなみにsummary['location']はこんな感じ
         # {'venue': 'Cherrywood Coffeehouse', 'address_lines': ['1400 E 38th 1/2 St.', ''], 'locality': 'Austin', 'region': 'TX', 'country': 'US', 'postal_code': '78702', 'location': {'latitude': 30.2935421, 'longitude': -97.716}, 'congressional_district': None, 'state_leg_district': None, 'state_senate_district': None}, 次のLocation
+        dic_title = summary['title']
         dic_latitude = summary['location']['location']['latitude']
         dic_longitude = summary['location']['location']['longitude']
 
       new_d_for_html = {
       'new_id': summary['id'], 
-      'new_title':summary['title'], 
+      'new_title': dic_title, 
       'new_description':summary['description'], 
       'new_timezone':summary['timezone'], 
       'new_latitude': dic_latitude,
       'new_longitude': dic_longitude, 
       'new_created_date':summary['created_date'], 
       }
-
+    
       new_d_for_js = {
       # 'new_id': summary['id'], 
-      # 'new_title':summary['title'], 
       # 'new_description':summary['description'], 
       # 'new_timezone':summary['timezone'], 
       'new_latitude': dic_latitude,
@@ -153,6 +191,9 @@ def index_view(request):
       # 'latitude': final_summary_latitude,
       # 'longitude': final_summary_longitude,
       # 'list_data': title_latitude_longitude_dict_data_in_list
+
+      # 下記はPagination関係
+      # 'page_obj': page_obj,
 
     }
 
