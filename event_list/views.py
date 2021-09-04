@@ -19,8 +19,11 @@ def index_view(request):
   # 参考文献
   # https://www.headboost.jp/python-delete-strings/
   url_next_querry_parameter = url_next.strip("https://api.mobilize.us/v1/events")
+  url_previous_querry_parameter = url_previous.strip("https://api.mobilize.us/v1/events")
   # 下記がクエリパラメータ
   parameter = request.GET.get("cursor")
+
+
   # クエリパラメータを取得できればクエリパラメータを加えたURLを作成
   # クエリパラメータを取得できればデフォルトのURL(https://api.mobilize.us/v1/events)にクエリパラメータをセットし
   if parameter:
@@ -163,10 +166,11 @@ def index_view(request):
     # 'latitude': final_summary_latitude,
     # 'longitude': final_summary_longitude,
     # 'list_data': title_latitude_longitude_dict_data_in_list
-    'url': url,
+    # 'url': url,
     # 下記はPagination関係
     # 'page_obj': page_obj,
     'url_next_querry_parameter': url_next_querry_parameter,
+    'url_previous_querry_parameter': url_previous_querry_parameter,
   }
 
 

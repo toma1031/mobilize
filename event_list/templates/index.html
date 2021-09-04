@@ -287,8 +287,10 @@
   {% endfor %}
 <!-- Pagination -->
   <!-- Fontawesome、Arrow_Icon -->
+  <!-- それぞれのボタンにクエリパラメーターを設置
+  https://utamaro.hatenablog.jp/entry/2018/10/21/102148 -->
   <div class="fontawesome-icon">
-    <i class="fas fa-arrow-circle-left"></i>
+    <a class="fas fa-arrow-circle-left" href="{% url 'index' %}{{ url_previous_querry_parameter }}"></a>
     <a class="fas fa-arrow-circle-right" href="{% url 'index' %}{{ url_next_querry_parameter }}"></a>
   </div>
   
