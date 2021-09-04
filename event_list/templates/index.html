@@ -4,18 +4,19 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <!-- Bootstrap CSS -->
-    <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css"
-    integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous"> -->
+
+    <!-- Road CSS -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <!-- Google Map表示 -->
+    <!-- Google Map -->
     <!-- 参考資料
     https://qiita.com/Haruka-Ogawa/items/997401a2edcd20e61037 -->
     <!-- https://www.itti.jp/web-design/how-to-display-a-map-using-google-map-api/ -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCleE-Z2qlfSDbIJWFRKA8susZPY44Vv3o&callback=initMap" async></script>
+
+    <!-- Fontawesome_for_NEXT&Previous_Button -->
+    <script src="https://kit.fontawesome.com/cc7e134709.js" crossorigin="anonymous"></script>
     <!-- <script>
       function initMap() {
         var mapPosition = new google.maps.LatLng( 1,1 );//緯度経度
@@ -119,10 +120,6 @@
     // 1: {new_latitude: 32.4652204, new_longitude: -97.4273195}
     // 2: {new_latitude: 30.2603535, new_longitude: -97.7145152}
     var listData = JSON.parse('{{ list_data_for_js|safe }}')
-    // console.log(listData)
-    // for (var i = 0; i < listData.length; i++) {
-    //   console.log(listData[i])
-    // }
 
 
     new_latitude_longitude_list = []
@@ -141,12 +138,14 @@
     for (var j = 0; j < new_latitude_longitude_list.length; j++) {
       // ここで変数final_latitude、final_longitudeにnew_latitude_longitude_listの各インデックス番号を割り当てていき
       // 入れ込んでいく
+      final_title = new_latitude_longitude_list[j].new_title
       final_latitude = new_latitude_longitude_list[j].new_latitude
       final_longitude = new_latitude_longitude_list[j].new_longitude
 
       // ここでnew_dというリストをつくり、
        new_d = {
-            name: String(final_latitude)+'&'+String(final_longitude),
+            // name: String(final_latitude)+'&'+String(final_longitude),
+            name: final_title,
             lat: final_latitude,
             lng: final_longitude,     
       }
@@ -274,7 +273,7 @@
   <div id="sample"></div>
   {% for list in list_data_for_html %}
   <div class="each_event">
-    <!-- <h1>Id: {{ list.new_id }}</h1> -->
+    <h1>Id: {{ list.new_id }}</h1>
     <h2>Event Title: {{ list.new_title }}</h2>
     <h3>Description: {{ list.new_description }}</h3>
     <h4>Created_date: {{ list.new_created_date }}</h4>
@@ -286,32 +285,12 @@
   </div>
 
   {% endfor %}
-
-<!-- 下記はPagination関係 -->
-  <!-- 前へ の部分 -->
-  {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}">Prev</a>
-  {% endif %}
-
-  <!-- 数字の部分 -->
-  {% for num in page_obj.paginator.page_range %}
-    {% if page_obj.number == num %}
-      <span>{{ num }}</span>
-    {% else %}
-      <a href="?page={{ num }}">{{ num }}</a>
-    {% endif %}
-  {% endfor %}
-
-  <!-- 次へ の部分 -->
-  {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}">Next</a>
-  {% endif %}
-
+<!-- Pagination -->
+  <!-- Fontawesome、Arrow_Icon -->
+  <div class="fontawesome-icon">
+    <i class="fas fa-arrow-circle-left"></i>
+    <a class="fas fa-arrow-circle-right" href="{% url 'index' %}{{ url_next_querry_parameter }}"></a>
+  </div>
   
-  <!-- Optional JavaScript -->
-  <!-- jQuery first, Bootstrap JS -->
-  <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-  <script src="{% static 'js/main.js' %}"></script> -->
 
 </body>

@@ -7,225 +7,192 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 import requests
 import json
-
-# paginationについて
-# 参考文献
-# https://blog.narito.ninja/detail/31/
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-def paginate_queryset(request, queryset, count):
-    # """Pageオブジェクトを返す。
-
-    # ページングしたい場合に利用してください。
-
-    # countは、1ページに表示する件数です。
-    # 返却するPgaeオブジェクトは、以下のような感じで使えます。::
-
-    #     {% if page_obj.has_previous %}
-    #       <a href="?page={{ page_obj.previous_page_number }}">Prev</a>
-    #     {% endif %}
-
-    # また、page_obj.object_list で、count件数分の絞り込まれたquerysetが取得できます。
-
-    # """
-    paginator = Paginator(queryset, count)
-    page = request.GET.get('page')
-    try:
-        page_obj = paginator.page(page)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-    return page_obj
-
-
-
+import re
 
 # 関数ベースで書く際に第１引数にrequestを渡すのは決まっています。
 def index_view(request):
-    # 下記はpagination関係
-    # page_obj = paginate_queryset(request, 3)
-    
-  
-  # ここでURLを取得して
-    url = 'https://api.mobilize.us/v1/events'
-    # response変数にGETしたURLのAPIを格納
+  # ここでとりあえずURLを定義
+  url = 'https://api.mobilize.us/v1/events'
+  url_next = 'https://api.mobilize.us/v1/events?cursor=cD0xMjU%3D'
+  url_previous = 'https://api.mobilize.us/v1/events?cursor=cj0xJnA9OTg%3D'
+  # urlからクエリパラメーターの部分だけを抜き出し
+  # 参考文献
+  # https://www.headboost.jp/python-delete-strings/
+  url_next_querry_parameter = url_next.strip("https://api.mobilize.us/v1/events")
+  # 下記がクエリパラメータ
+  parameter = request.GET.get("cursor")
+  # クエリパラメータを取得できればクエリパラメータを加えたURLを作成
+  # クエリパラメータを取得できればデフォルトのURL(https://api.mobilize.us/v1/events)にクエリパラメータをセットし
+  if parameter:
+    url = url + '?' + "cursor" + "=" + parameter
+    # ここでURLを取得して
     return_json = json.loads(requests.get(url).text)
     response = return_json['data'] 
-    pagination_next = return_json['next'] 
-    pagination_previous = return_json['previous'] 
-    # contexという辞書型を作る。list_dataという変数にresponse（API）入れていく
+  # クエリパラメータがない場合
+  else:
+    # urlはそのままで
+    url = 'https://api.mobilize.us/v1/events'
+    return_json = json.loads(requests.get(url).text)
+    response = return_json['data']
+
+  dic_for_templates_for_html = []
+  dic_for_templates_for_js = []
+  for summary in response:
+    # print(summary['location'])
+    # print(summary['title'])
+    # summaryのLocationキーは何も入っていない時があるので
+    if summary['location'] is None:
+      # 参考文献
+      # https://note.nkmk.me/python-pass-usage/
+      # 入っていない時はそれ以降の処理を行わずに次のステップに進むため、Continue
+      continue
+    else:
+      # Locationキーはネスト構造となっているため下記のような感じで下っていく
+      # ちなみにsummary['location']はこんな感じ
+      # {'venue': 'Cherrywood Coffeehouse', 'address_lines': ['1400 E 38th 1/2 St.', ''], 'locality': 'Austin', 'region': 'TX', 'country': 'US', 'postal_code': '78702', 'location': {'latitude': 30.2935421, 'longitude': -97.716}, 'congressional_district': None, 'state_leg_district': None, 'state_senate_district': None}, 次のLocation
+      dic_title = summary['title']
+      dic_latitude = summary['location']['location']['latitude']
+      dic_longitude = summary['location']['location']['longitude']
+
     # 参考文献
-    # https://note.nkmk.me/python-requests-usage/
-    # Webページの内容を取得したい場合はこのtext属性を使う。
-    # for分でsummaryを回していますがその内容をリストに格納して、そのリストをlist_dataのバリューにすればいい
+    # https://pg-chain.com/python-in#:~:text=Python%E3%81%A7%E3%81%AF%E3%80%8Cin%E3%80%8D%E3%82%92%E4%BD%BF%E3%81%A3,%E8%BF%94%E3%81%99%E3%81%93%E3%81%A8%E3%81%8C%E3%81%A7%E3%81%8D%E3%81%BE%E3%81%99%E3%80%82
+    # https://www.javadrive.jp/python/string/index1.html#section2
+    # もしdic_title(イベントタイトル)の中にシングルクオテーションが含まれていたら
+    if "'" in dic_title:
+      # エスケンプシーケンスを使用する
+      # https://www.javadrive.jp/python/string/index2.html
+      # シングルクオテーションを文字列として認識させる
+      dic_title = dic_title.replace("'", "")
+      print('含まれる')
+    # もしdic_title(イベントタイトル)の中にダブルオテーションが含まれていたら
+    elif '"' in dic_title:
+      # ダブルオテーションを文字列として認識させる
+      dic_title = dic_title.replace('"', '')
+      print('含まれる')
+    else:
+      print('含まれない')
 
-    # summary_list_id = []
-    # summary_list_title = []
-    # summary_list_latitude = []
-    # summary_list_longitude = []
-    # for summary in response:
-    #   summary_list_id.append(summary['id'])
-    #   summary_list_title.append(summary['title'])
-    #   if summary['location'] is None:
-    #     pass
-    #   else:
-    #     summary_list_latitude.append(summary['location']['location']['latitude'])
-    #   if summary['location'] is None:
-    #     pass
-    #   else:
-    #     summary_list_longitude.append(summary['location']['location']['longitude'])
-    #   new_d = {
-    #   'new_id': summary_list_id, 
-    #   'new_title': summary_list_title, 
-    #   'new_latitude': summary_list_latitude, 
-    #   'new_latitude': summary_list_latitude, 
-    #   }
-
-    #   l = []
-
-    #   l.append(new_d)
-  
-    dic_for_templates_for_html = []
-    dic_for_templates_for_js = []
-    for summary in response:
-      print(summary['location'])
-      print(summary['title'])
-      # summaryのLocationキーは何も入っていない時があるので
-      if summary['title'] is None or summary['location'] is None:
-        # 参考文献
-        # https://note.nkmk.me/python-pass-usage/
-        # 入っていない時はそれ以降の処理を行わずに次のステップに進むため、Continue
-        continue
-      else:
-        # Locationキーはネスト構造となっているため下記のような感じで下っていく
-        # ちなみにsummary['location']はこんな感じ
-        # {'venue': 'Cherrywood Coffeehouse', 'address_lines': ['1400 E 38th 1/2 St.', ''], 'locality': 'Austin', 'region': 'TX', 'country': 'US', 'postal_code': '78702', 'location': {'latitude': 30.2935421, 'longitude': -97.716}, 'congressional_district': None, 'state_leg_district': None, 'state_senate_district': None}, 次のLocation
-        dic_title = summary['title']
-        dic_latitude = summary['location']['location']['latitude']
-        dic_longitude = summary['location']['location']['longitude']
-
-      new_d_for_html = {
-      'new_id': summary['id'], 
-      'new_title': dic_title, 
-      'new_description':summary['description'], 
-      'new_timezone':summary['timezone'], 
-      'new_latitude': dic_latitude,
-      'new_longitude': dic_longitude, 
-      'new_created_date':summary['created_date'], 
-      }
     
-      new_d_for_js = {
-      # 'new_id': summary['id'], 
-      # 'new_title': dic_title, 
-      # 'new_description':summary['description'], 
-      # 'new_timezone':summary['timezone'], 
-      'new_latitude': dic_latitude,
-      'new_longitude': dic_longitude, 
-      # 'new_created_date':summary['created_date'], 
-      }
-      
-      dic_for_templates_for_html.append(new_d_for_html)
-      dic_for_templates_for_js.append(new_d_for_js)
-
-
-    # summary_listはリスト型。
-    # そこから辞書を取り出して、さらに任意のキーの値を抽出（ここではidキー）
-    # 参考文献
-    # https://note.nkmk.me/python-dict-list-values/
-    # summary_id = [each_summary_id.get('id') for each_summary_id in summary_list]
-    # summary_title = [each_summary_title.get('title') for each_summary_title in summary_list]
-
-    # 参考文献
-    # https://note.nkmk.me/python-dict-get/
-    # 緯度を取り出す
-    # summary_latitude = [each_summary_latitude.get('location') for each_summary_latitude in summary_list]
-    # final_summary_latitude = []
-    # # summary_latitudeはリスト型、その中に辞書が内包されているのでForで取り出してやる
-    # for each_summary_latitude2 in summary_latitude:
-    #   print(type(summary_latitude))
-    #   # もし、each_summary_latitude2（辞書型）に値が無ければスキップ
-    #   if each_summary_latitude2 is None:
-    #       continue
-    #   # もし、each_summary_latitude2（辞書型）に値が辞書locationの中にあるlatitudeキーのValueをfinal_summary_latitude変数にAppend
-    #   else:
-    #       final_summary_latitude.append(each_summary_latitude2['location']['latitude'])
-
-
-    # # 経度を取り出す
-    # summary_longitude = [each_summary_longitude.get('location') for each_summary_longitude in summary_list]
-    # final_summary_longitude = []
-    # # summary_longitudeはリスト型、その中に辞書が内包されているのでForで取り出してやる
-    # for each_summary_longitude2 in summary_longitude:
-    #   print(type(summary_longitude))
-    #   # もし、each_summary_longitude2（辞書型）に値が無ければスキップ
-    #   if each_summary_longitude2 is None:
-    #       continue
-    #   # もし、each_summary_longitude2（辞書型）に値が辞書locationの中にあるlongitudeキーのValueをfinal_summary_longitude変数にAppend
-    #   else:
-    #       final_summary_longitude.append(each_summary_longitude2['location']['longitude'])
-
-    # title_latitude_longitude_dict_data_in_list = []
-
-    # title_latitude_longitude_dict_data = {
-    #   'id': summary_id,
-    #   'title': summary_title, 
-    #   'latitude': final_summary_latitude,
-    #   'longitude': final_summary_longitude,
-    # }
-
-    # if title_latitude_longitude_dict_data is None:
-    #     pass
-    # else:
-    #     title_latitude_longitude_dict_data_in_list.append(title_latitude_longitude_dict_data)
-
-    # print("1111111111111111111111")
-    # for each_title_latitude_longitude_dict_data_in_list in title_latitude_longitude_dict_data_in_list:
-    #   print(each_title_latitude_longitude_dict_data_in_list)
-
-
-    context = {
-      # 下記はHTML用
-      'list_data_for_html': dic_for_templates_for_html,
-      # 下記はJavascript用
-      # Script側で使用するため、Views側で一旦JSON形式に変換
-      # 参考資料
-      # https://python.softmoco.com/basics/python-json-dump.php
-      'list_data_for_js': json.dumps(dic_for_templates_for_js),  
-      # 'title': summary_title, 
-      # 'latitude': final_summary_latitude,
-      # 'longitude': final_summary_longitude,
-      # 'list_data': title_latitude_longitude_dict_data_in_list
-
-      # 下記はPagination関係
-      # 'page_obj': page_obj,
-
-    }
-
-
-    # print('ID')
-    # print(summary_id)
-    # print('タイトル')
-    # print(summary_title)
-    # print('緯度')
-    # print(final_summary_latitude)
-    # print('経度')
-    # print(final_summary_longitude)
-    # print('リストデータ')
-    # print(title_latitude_longitude_dict_data_in_list)
-    print('サマリー')
-    print(type(dic_for_templates_for_js))
-    print('ネクスト')
-    print(pagination_next)
-    print('プリヴィアス')
-    print(pagination_previous)
-    print('タイトル')
+    print('イベントタイトル')
     print(dic_title)
-    print('緯度')
-    print(context)
-    # return render(request, 'index.html', ここには辞書型しか置けない)ので上記で辞書型に変換
-    # list_dataのValueであるsummary_listはリスト型、そしてそのリストに辞書が入っている
-    return render(request, 'index.html', context)
+
+    new_d_for_html = {
+    'new_id': summary['id'], 
+    'new_title': dic_title, 
+    'new_description':summary['description'], 
+    'new_timezone':summary['timezone'], 
+    'new_latitude': dic_latitude,
+    'new_longitude': dic_longitude, 
+    'new_created_date':summary['created_date'], 
+    }
+  
+    new_d_for_js = {
+    'new_title': dic_title,  
+    'new_latitude': dic_latitude,
+    'new_longitude': dic_longitude, 
+    }
+    
+    dic_for_templates_for_html.append(new_d_for_html)
+    dic_for_templates_for_js.append(new_d_for_js)
+
+
+  # summary_listはリスト型。
+  # そこから辞書を取り出して、さらに任意のキーの値を抽出（ここではidキー）
+  # 参考文献
+  # https://note.nkmk.me/python-dict-list-values/
+  # summary_id = [each_summary_id.get('id') for each_summary_id in summary_list]
+  # summary_title = [each_summary_title.get('title') for each_summary_title in summary_list]
+
+  # 参考文献
+  # https://note.nkmk.me/python-dict-get/
+  # 緯度を取り出す
+  # summary_latitude = [each_summary_latitude.get('location') for each_summary_latitude in summary_list]
+  # final_summary_latitude = []
+  # # summary_latitudeはリスト型、その中に辞書が内包されているのでForで取り出してやる
+  # for each_summary_latitude2 in summary_latitude:
+  #   print(type(summary_latitude))
+  #   # もし、each_summary_latitude2（辞書型）に値が無ければスキップ
+  #   if each_summary_latitude2 is None:
+  #       continue
+  #   # もし、each_summary_latitude2（辞書型）に値が辞書locationの中にあるlatitudeキーのValueをfinal_summary_latitude変数にAppend
+  #   else:
+  #       final_summary_latitude.append(each_summary_latitude2['location']['latitude'])
+
+
+  # # 経度を取り出す
+  # summary_longitude = [each_summary_longitude.get('location') for each_summary_longitude in summary_list]
+  # final_summary_longitude = []
+  # # summary_longitudeはリスト型、その中に辞書が内包されているのでForで取り出してやる
+  # for each_summary_longitude2 in summary_longitude:
+  #   print(type(summary_longitude))
+  #   # もし、each_summary_longitude2（辞書型）に値が無ければスキップ
+  #   if each_summary_longitude2 is None:
+  #       continue
+  #   # もし、each_summary_longitude2（辞書型）に値が辞書locationの中にあるlongitudeキーのValueをfinal_summary_longitude変数にAppend
+  #   else:
+  #       final_summary_longitude.append(each_summary_longitude2['location']['longitude'])
+
+  # title_latitude_longitude_dict_data_in_list = []
+
+  # title_latitude_longitude_dict_data = {
+  #   'id': summary_id,
+  #   'title': summary_title, 
+  #   'latitude': final_summary_latitude,
+  #   'longitude': final_summary_longitude,
+  # }
+
+  # if title_latitude_longitude_dict_data is None:
+  #     pass
+  # else:
+  #     title_latitude_longitude_dict_data_in_list.append(title_latitude_longitude_dict_data)
+
+  # print("1111111111111111111111")
+  # for each_title_latitude_longitude_dict_data_in_list in title_latitude_longitude_dict_data_in_list:
+  #   print(each_title_latitude_longitude_dict_data_in_list)
+
+
+  context = {
+    # 下記はHTML用
+    'list_data_for_html': dic_for_templates_for_html,
+    # 下記はJavascript用
+    # Script側で使用するため、Views側で一旦JSON形式に変換
+    # 参考資料
+    # https://python.softmoco.com/basics/python-json-dump.php
+    'list_data_for_js': json.dumps(dic_for_templates_for_js),  
+    # 'title': summary_title, 
+    # 'latitude': final_summary_latitude,
+    # 'longitude': final_summary_longitude,
+    # 'list_data': title_latitude_longitude_dict_data_in_list
+    'url': url,
+    # 下記はPagination関係
+    # 'page_obj': page_obj,
+    'url_next_querry_parameter': url_next_querry_parameter,
+  }
+
+
+  # print('ID')
+  # print(summary_id)
+  # print('タイトル')
+  # print(summary_title)
+  # print('緯度')
+  # print(final_summary_latitude)
+  # print('経度')
+  # print(final_summary_longitude)
+  # print('リストデータ')
+  # print(title_latitude_longitude_dict_data_in_list)
+  print('サマリー')
+  print(type(dic_for_templates_for_js))
+  print('ネクスト')
+  # print(paginations_next)
+  # print('プリヴィアス')
+  # print(paginations_previous)
+  print('タイトル')
+  print(dic_title)
+  print('緯度')
+  print(context)
+  # return render(request, 'index.html', ここには辞書型しか置けない)ので上記で辞書型に変換
+  # list_dataのValueであるsummary_listはリスト型、そしてそのリストに辞書が入っている
+  return render(request, 'index.html', context)
 
 
 # こちらのコードも使用できる
@@ -244,10 +211,6 @@ def index_view(request):
 #     }
 #     # return render(request, 'index.html', ここには辞書型しか置けない)ので上記で辞書型に変換
 #     return render(request, 'index.html', context)
-
-
-
-
 
 
 # [{'id': 1, 
