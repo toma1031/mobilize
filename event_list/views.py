@@ -1,21 +1,16 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView
+from django.http import Http404
 import requests
 import json
+from datetime import datetime
+from urllib.parse import urlparse
 
 
 def index_view(request):
     # Define URL
     url = 'https://api.mobilize.us/v1/events'
-    url_next = 'https://api.mobilize.us/v1/events?cursor=cD0xMjU%3D'
-    url_previous = 'https://api.mobilize.us/v1/events?cursor=cj0xJnA9OTg%3D'
-    # Extract only the query parameter part from the url
-    # reference
-    # https://www.headboost.jp/python-delete-strings/
-    url_next_querry_parameter = url_next.strip(
-        "https://api.mobilize.us/v1/events")
-    url_previous_querry_parameter = url_previous.strip(
-        "https://api.mobilize.us/v1/events")
+
     # query parameter
     parameter = request.GET.get("cursor")
 
@@ -32,6 +27,9 @@ def index_view(request):
         return_json = json.loads(requests.get(url).text)
         response = return_json['data']
 
+    if 'error' in return_json:
+        raise Http404('does not exist')
+
     dic_for_templates_for_html = []
     dic_for_templates_for_js = []
     for summary in response:
@@ -43,8 +41,12 @@ def index_view(request):
             continue
         else:
             dic_title = summary['title']
-            dic_latitude = summary['location']['location']['latitude']
-            dic_longitude = summary['location']['location']['longitude']
+            try:
+                dic_latitude = summary['location']['location']['latitude']
+                dic_longitude = summary['location']['location']['longitude']
+            except KeyError:
+                dic_latitude = None
+                dic_longitude = None
 
         # reference
         # https://pg-chain.com/python-in#:~:text=Python%E3%81%A7%E3%81%AF%E3%80%8Cin%E3%80%8D%E3%82%92%E4%BD%BF%E3%81%A3,%E8%BF%94%E3%81%99%E3%81%93%E3%81%A8%E3%81%8C%E3%81%A7%E3%81%8D%E3%81%BE%E3%81%99%E3%80%82
@@ -67,7 +69,7 @@ def index_view(request):
             'new_timezone': summary['timezone'],
             'new_latitude': dic_latitude,
             'new_longitude': dic_longitude,
-            'new_created_date': summary['created_date'],
+            'new_created_date': datetime.fromtimestamp(summary['created_date']),
         }
 
         new_d_for_js = {
@@ -79,6 +81,11 @@ def index_view(request):
         dic_for_templates_for_html.append(new_d_for_html)
         dic_for_templates_for_js.append(new_d_for_js)
 
+    # Extract only the query parameter part from the url
+    # reference
+    # https://www.headboost.jp/python-delete-strings/
+    url_next_querry_parameter = '?' + urlparse(return_json['next']).query if return_json['next'] else None 
+    url_previous_querry_parameter = '?' + urlparse(return_json['previous']).query if return_json['previous'] else None 
     context = {
         # For HTML
         'list_data_for_html': dic_for_templates_for_html,
