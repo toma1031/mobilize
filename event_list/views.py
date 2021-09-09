@@ -28,11 +28,12 @@ def index_view(request):
         response = return_json['data']
 
 
-    # if 'error' in return_json:
-    #     raise Http404('does not exist')
+    if 'error' in return_json:
+        raise Http404('does not exist')
 
     dic_for_templates_for_html = []
     dic_for_templates_for_js = []
+
     for summary in response:
         # Sometimes the Location key of the summary may not contain anything
         if summary['location'] is None :
@@ -106,5 +107,4 @@ def index_view(request):
         'url_next_querry_parameter': url_next_querry_parameter,
         'url_previous_querry_parameter': url_previous_querry_parameter,
     }
-
     return render(request, 'index.html', context)
