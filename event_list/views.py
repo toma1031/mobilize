@@ -16,25 +16,26 @@ def index_view(request):
 
     # If you can get the query parameters, set the query parameters to the default URL (https://api.mobilize.us/v1/events)
     if parameter:
-        url = url + '?' + "cursor" + "=" + parameter
+        url = url + '?' + "cursor" + "=" + parameter + "&" + "timeslot_start=gte_now"
         # Get URL
         return_json = json.loads(requests.get(url).text)
         response = return_json['data']
     # No query parameter
     else:
         # Let leave the url
-        url = 'https://api.mobilize.us/v1/events'
+        url = 'https://api.mobilize.us/v1/events?timeslot_start=gte_now'
         return_json = json.loads(requests.get(url).text)
         response = return_json['data']
 
-    if 'error' in return_json:
-        raise Http404('does not exist')
+
+    # if 'error' in return_json:
+    #     raise Http404('does not exist')
 
     dic_for_templates_for_html = []
     dic_for_templates_for_js = []
     for summary in response:
         # Sometimes the Location key of the summary may not contain anything
-        if summary['location'] is None:
+        if summary['location'] is None :
             # reference
             # https://note.nkmk.me/python-pass-usage/
             # If it is none, it will proceed to the next step without performing any further processing,
@@ -62,21 +63,26 @@ def index_view(request):
             # Replace double quotation with empty
             dic_title = dic_title.replace('"', '')
 
-        new_d_for_html = {
-            'new_id': summary['id'],
-            'new_title': dic_title,
-            'new_description': summary['description'],
-            'new_timezone': summary['timezone'],
-            'new_latitude': dic_latitude,
-            'new_longitude': dic_longitude,
-            'new_created_date': datetime.fromtimestamp(summary['created_date']),
-        }
+        start_date_list = []
+        for i in range(len(summary['timeslots'])):
+            start_date = summary['timeslots'][i]['start_date']
+            start_date_list.append(datetime.fromtimestamp(start_date))
 
-        new_d_for_js = {
-            'new_title': dic_title,
-            'new_latitude': dic_latitude,
-            'new_longitude': dic_longitude,
-        }
+            new_d_for_html = {
+                'new_id': summary['id'],
+                'new_title': dic_title,
+                'new_description': summary['description'],
+                'new_timezone': summary['timezone'],
+                'new_latitude': dic_latitude,
+                'new_longitude': dic_longitude,
+                'new_start_dates': start_date_list,
+            }
+
+            new_d_for_js = {
+                'new_title': dic_title,
+                'new_latitude': dic_latitude,
+                'new_longitude': dic_longitude,
+            }
 
         dic_for_templates_for_html.append(new_d_for_html)
         dic_for_templates_for_js.append(new_d_for_js)

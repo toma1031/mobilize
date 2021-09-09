@@ -99,7 +99,11 @@
     <h1>Id: {{ list.new_id }}</h1>
     <h2>Event Title: {{ list.new_title }}</h2>
     <h3>Description: {{ list.new_description }}</h3>
-    <h4>Created_date: {{ list.new_created_date }}</h4>
+    <h4>Start Time: 
+      {% for new_start_date in list.new_start_dates %}
+      {{ new_start_date }} &nbsp; 
+      {% endfor %}
+    </h4>
     <h6>Timezone: {{ list.new_timezone }}</h6>
   </div>
 
